@@ -17,8 +17,6 @@ To start, you will need these tools:
 - [Git](https://git-scm.com/downloads)
 - Latest [Python](https://www.python.org/downloads/) release
 
-:warning: **WARNING**: Make sure to install Python with tcl/tk support. Otherwise, you will have to use the CLI version of the tool.
-
 After installing tools, run these commands to download the tool and its dependencies:
 ```sh
 git clone --depth=1 https://github.com/OpenM-Project/BEAMinject.git
