@@ -1,0 +1,3 @@
+git+https://github.com/OpenM-Project/librosewater.git
+psutil
+customtkinter
