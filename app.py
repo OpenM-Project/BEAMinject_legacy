@@ -7,7 +7,6 @@ https://github.com/OpenM-Project/BEAMinject for more info
 __version__ = "0.1.1"
 
 import sys
-import tkinter
 import threading
 import customtkinter
 import BEAMinjector
