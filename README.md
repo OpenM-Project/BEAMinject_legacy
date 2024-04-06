@@ -13,9 +13,7 @@ And you can join our [Discord](https://dsc.gg/openm "OpenM Community") server
 for further support needed.
 
 ## :inbox_tray: Usage
-:warning: **WARNING**: This will require you to have [`git`](https://git-scm.com/downloads) in your `PATH`.
-
-This tool requires some dependencies:
+To start, you will need these tools:
 - [Git](https://git-scm.com/downloads)
 - Latest [Python](https://www.python.org/downloads/) release
 
