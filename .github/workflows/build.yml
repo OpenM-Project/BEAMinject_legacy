@@ -32,7 +32,7 @@ jobs:
     
     - name: Build binary
       run: |
-        py -m PyInstaller --onefile app.py
+        py -m PyInstaller --noconsole --onefile app.py
         copy dist/app.exe BEAMinject.exe
 
     - name: Upload binary
