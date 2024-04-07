@@ -5,7 +5,7 @@
 -----
 
 ## :inbox_tray: Downloads
-All builds are available in our nightly.link page.
+You can download the latest nightly release [here](https://nightly.link/OpenM-Project/BEAMinject/workflows/build/main?preview).
 
 ## :computer: Support
 This only works on Windows,
