@@ -30,6 +30,7 @@ jobs:
         py .github/workflows/get_upx.py win64 .
     
     - name: Build binary
+      run:
         py -m PyInstaller --onefile app.py
         mv dist/app.exe ./BEAMinject.exe
 
