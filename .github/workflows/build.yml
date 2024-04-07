@@ -26,6 +26,7 @@ jobs:
 
     - name: Build binary
       run: |
+        pip install -r requirements.txt
         py -m PyInstaller --onefile app.py
         mv dist/app.exe ./BEAMinject.exe
 
