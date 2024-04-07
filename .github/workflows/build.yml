@@ -27,7 +27,7 @@ jobs:
     - name: Get dependencies
       run: |
         pip install -r requirements.txt
-        py .github/workflows/get_upx.py win64 .
+        py .github/workflows/get_upx.py -nf win64 .
     
     - name: Build binary
       run:
