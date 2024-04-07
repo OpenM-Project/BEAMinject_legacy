@@ -3,14 +3,13 @@ BEAMinjector script, made for BEAMinject
 
 USED FOR SILENT EXECUTABLE!
 """
-__version__ = "0.1.2"
+__version__ = "0.2.0"
 
 import os
 import sys
 import ctypes
 import librosewater
-import librosewater.modulehandler
-import librosewater.inject
+import librosewater.module
 import platform
 import psutil
 
@@ -22,7 +21,6 @@ else:
     # sys.stdout doesn't exist, so we can just write a dummy function
     def write_logs(*args, **kwargs):
         pass
-chunksize = 12
 quitfunc = sys.exit
 
 i64_patch = [
@@ -83,12 +81,10 @@ def main():
     process_handle = ctypes.windll.kernel32.OpenProcess(librosewater.PROCESS_ALL_ACCESS, False, PID)
     
     # Get module address and path
-    module_address, module_path = librosewater.modulehandler.wait_for_module(process_handle, "Windows.ApplicationModel.Store.dll")
-    module_size = os.stat(module_path).st_size
-    
+    module_address, module_path = librosewater.module.wait_for_module(process_handle, "Windows.ApplicationModel.Store.dll")
     # Dump module to variable
     write_logs("= Dumping module... ")
-    data = librosewater.modulehandler.dump_module(process_handle, module_address, module_size, chunksize=chunksize*1024) # returns as much data as it can
+    data = librosewater.module.dump_module(process_handle, module_address) # returns as much data as it can
     write_logs("done.\n")
 
     # Inject new module data
@@ -99,7 +95,7 @@ def main():
     write_logs("done!\n")
 
     write_logs("= Injecting module... ")
-    librosewater.inject.inject_module(process_handle, module_address, new_data)
+    librosewater.module.inject_module(process_handle, module_address, new_data)
     write_logs("done!\n")
 
     quitfunc()

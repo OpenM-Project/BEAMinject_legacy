@@ -4,7 +4,7 @@ BEAMinject GUI app
 This code is experimental, check out our GitHub repository:
 https://github.com/OpenM-Project/BEAMinject for more info
 """
-__version__ = "0.1.2"
+__version__ = "0.2.0"
 
 import sys
 import threading
@@ -34,7 +34,6 @@ def start_inject():
     logwidget.pack(pady=10, padx=10)
     BEAMinjector.launchmc = launchmc.get()
     BEAMinjector.write_logs = lambda x: write_logs(logwidget, x)
-    BEAMinjector.chunksize = chunksize.get()
     BEAMinjector.quitfunc = quit_button
     thread = threading.Thread(target=BEAMinjector.main, args=())
     thread.start()
@@ -68,33 +67,8 @@ startbutton.configure(text="Let's go!")
 launchmc = customtkinter.IntVar()
 launchmc.set(1)
 launchswitch = customtkinter.CTkSwitch(master=frame, variable=launchmc)
-launchswitch.pack(pady=10, padx=10)
+launchswitch.pack(pady=30, padx=10)
 launchswitch.configure(text="Launch Minecraft")
-
-
-# Chunksize
-def hide_chunkvar():
-    if cust_chunk.get():
-        slider_callback(12)
-        chunksize_label.pack(pady=5, padx=5)
-        chunksize_slider.pack(pady=5, padx=5)
-    else:
-        chunksize_label.pack_forget()
-        chunksize_slider.pack_forget()
-cust_chunk = customtkinter.IntVar()
-custchunk_switch = customtkinter.CTkSwitch(master=frame, variable=cust_chunk, command=hide_chunkvar)
-custchunk_switch.configure(text="Use custom chunksize")
-custchunk_switch.pack(pady=10, padx=10)
-
-chunksize = customtkinter.IntVar()
-chunksize.set(12)
-def slider_callback(val):
-    chunksize.set(val)
-    chunksize_label.configure(text=f"Chunksize: {chunksize.get()} * 1024 bytes")
-chunksize_label = customtkinter.CTkLabel(master=frame, justify=customtkinter.LEFT)
-chunksize_label.configure(text=f"Chunksize: {chunksize.get()} * 1024 bytes")
-chunksize_slider = customtkinter.CTkSlider(master=frame, command=slider_callback, from_=1, to=16, variable=chunksize)
-
 
 # Theme Switch
 currenttheme = customtkinter.IntVar()
@@ -106,7 +80,7 @@ def updatetheme():
     else:
         customtkinter.set_appearance_mode("dark")
 themeswitch = customtkinter.CTkSwitch(master=frame, variable=currenttheme, command=updatetheme)
-themeswitch.pack(pady=10, padx=10, side=customtkinter.LEFT)
+themeswitch.pack(pady=25, padx=10, side=customtkinter.LEFT)
 themeswitch.configure(text="Light Mode")
 
 
