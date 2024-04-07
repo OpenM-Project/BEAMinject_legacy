@@ -34,9 +34,13 @@ jobs:
       run: |
         py -m PyInstaller --noconsole --onefile app.py
         copy dist/app.exe BEAMinject.exe
+        py -m PyInstaller --noconsole --onefile BEAMinjector.py
+        copy dist/BEAMinjector.exe BEAMinject_silent.exe
 
     - name: Upload binary
       uses: actions/upload-artifact@v2
       with:
         name: build
-        path: D:\a\BEAMinject\BEAMinject\BEAMinject.exe
+        path: |
+          D:\a\BEAMinject\BEAMinject\BEAMinject.exe
+          D:\a\BEAMinject\BEAMinject\BEAMinject_silent.exe
