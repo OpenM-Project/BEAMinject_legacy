@@ -21,7 +21,7 @@ After installing tools, run these commands to download the tool and its dependen
 ```sh
 git clone --depth=1 https://github.com/OpenM-Project/BEAMinject.git
 cd BEAMinject
-py -m pip install -r requirements.txt
+pip install -r requirements.txt
 ```
 Once the commands are done, you can run the app by double-clicking `BEAMinject.cmd` from the BEAMinject directory.
 #### :warning: WARNING
