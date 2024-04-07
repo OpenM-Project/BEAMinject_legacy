@@ -1,7 +1,8 @@
-name: Build Python binaries
+name: Build binary release
 
 on:
   workflow_dispatch:
+  push:
 
 jobs:
   build_windows:
@@ -21,12 +22,14 @@ jobs:
         cd pyinstaller/bootloader
         py waf all
         cd ..
-        pip install wheel setuptools
         pip install .
 
-    - name: Build binary
+    - name: Get dependencies
       run: |
         pip install -r requirements.txt
+        py .github/workflows/get_upx.py win64 .
+    
+    - name: Build binary
         py -m PyInstaller --onefile app.py
         mv dist/app.exe ./BEAMinject.exe
 
