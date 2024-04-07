@@ -33,7 +33,7 @@ jobs:
     - name: Build binary
       run:
         py -m PyInstaller --onefile app.py
-        mv dist/app.exe ./BEAMinject.exe
+        copy dist/app.exe BEAMinject.exe
 
     - name: Upload binary
       uses: actions/upload-artifact@v2
