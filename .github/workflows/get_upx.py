@@ -10,7 +10,7 @@ import shutil
 parser = argparse.ArgumentParser()
 parser.add_argument("asset_type", type=str, default="win64",
                         help="Asset type for release. Default is win64.")
-parser.add_argument("download_directory", type=str, default=".",
+parser.add_argument("download_directory", type=str, default=".", nargs='?',
                         help="Directory to copy upx.exe to. Default is current directory.")
 parser.add_argument('-nf', '--nofail', help="Returns exit code 0 on error.", action='store_true')
 args = parser.parse_args()

@@ -4,13 +4,15 @@ BEAMinject GUI app
 This code is experimental, check out our GitHub repository:
 https://github.com/OpenM-Project/BEAMinject for more info
 """
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 import sys
 import threading
 import customtkinter
 import BEAMinjector
 
+# Identify for inject_buildstr.py
+buildstr = "0c96985"
 
 app = customtkinter.CTk()
 app.geometry("480x300")
@@ -83,6 +85,11 @@ themeswitch = customtkinter.CTkSwitch(master=frame, variable=currenttheme, comma
 themeswitch.pack(pady=25, padx=10, side=customtkinter.LEFT)
 themeswitch.configure(text="Light Mode")
 
+
+# Build string
+title = customtkinter.CTkLabel(master=frame, justify=customtkinter.RIGHT)
+title.pack(pady=5, padx=5, side=customtkinter.RIGHT)
+title.configure(text=f"build {buildstr}" + " " * 8)
 
 # Start app
 app.mainloop()

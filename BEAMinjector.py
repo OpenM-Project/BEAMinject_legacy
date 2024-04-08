@@ -1,9 +1,11 @@
 """
-BEAMinjector script, made for BEAMinject
+BEAMinjector module, made for BEAMinject
 
-USED FOR SILENT EXECUTABLE!
+For usage as a module, check out the
+"# Modify values for imported usage" section
+of the code, and then configure accordingly
 """
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 import os
 import sys
@@ -13,7 +15,7 @@ import librosewater.module
 import platform
 import psutil
 
-# These can be changed externally
+# Modify values for imported usage
 launchmc = True
 if sys.stdout:
     write_logs = sys.stdout.write
@@ -22,6 +24,9 @@ else:
     def write_logs(*args, **kwargs):
         pass
 quitfunc = sys.exit
+
+# Identify for inject_buildstr.py
+buildstr = "custombuild"
 
 i64_patch = [
     (
@@ -80,12 +85,23 @@ def main():
     PID = process.pid
     process_handle = ctypes.windll.kernel32.OpenProcess(librosewater.PROCESS_ALL_ACCESS, False, PID)
     
-    # Get module address and path
-    module_address, module_path = librosewater.module.wait_for_module(process_handle, "Windows.ApplicationModel.Store.dll")
+    # Get module address
+    write_logs("= Waiting for module... ")
+    try:
+        module_address, _ = librosewater.module.wait_for_module(process_handle, "Windows.ApplicationModel.Store.dll")
+    except librosewater.exceptions.QueryError:
+        write_logs(f"! Couldn't wait for module, did Minecraft close?\n")
+        return quitfunc()
+    write_logs(f"found at {hex(module_address)}!\n")
+
     # Dump module to variable
     write_logs("= Dumping module... ")
-    data = librosewater.module.dump_module(process_handle, module_address) # returns as much data as it can
-    write_logs("done.\n")
+    try:
+        data = librosewater.module.dump_module(process_handle, module_address)
+    except librosewater.exceptions.ReadWriteError:
+        write_logs(f"\n! Couldn't dump module, did Minecraft close?\n")
+        return quitfunc()
+    write_logs(f"done (read {len(data[1])} bytes)!\n")
 
     # Inject new module data
     write_logs("= Patching module... ")
@@ -95,10 +111,14 @@ def main():
     write_logs("done!\n")
 
     write_logs("= Injecting module... ")
-    librosewater.module.inject_module(process_handle, module_address, new_data)
-    write_logs("done!\n")
+    try:
+        librosewater.module.inject_module(process_handle, module_address, new_data)
+    except librosewater.exceptions.ReadWriteError:
+        write_logs(f"\n! Couldn't inject module, did Minecraft close?\n")
+        return quitfunc()
+    write_logs(f"done (wrote {len(new_data)} bytes)!\n")
 
-    quitfunc()
+    return quitfunc()
 
 if __name__ == "__main__":
     main()
