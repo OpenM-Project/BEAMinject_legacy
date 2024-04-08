@@ -12,7 +12,7 @@ import customtkinter
 import BEAMinjector
 
 # Identify for inject_buildstr.py
-buildstr = "0c96985"
+buildstr = "custombuild"
 
 app = customtkinter.CTk()
 app.geometry("480x300")
