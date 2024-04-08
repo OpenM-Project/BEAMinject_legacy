@@ -56,17 +56,12 @@ def get_patches_for_platform() -> list:
     Raises NotImplementedError for unavailable targets.
     """
     cpuarch = platform.machine().casefold()
-    match cpuarch:
-        case "i386":
-            return i32_patch
-        case "i686":
-            return i32_patch
-        case "amd64":
-            return i64_patch
-        case "x86_64":
-            return i64_patch
-        case _:
-            raise NotImplementedError("unsupported architecture %s" % cpuarch)
+    if cpuarch in ["i386", "i686"]:
+        return i32_patch
+    elif cpuarch in ["amd64", "x86_64"]:
+        return i64_patch
+    else:
+        raise NotImplementedError("unsupported architecture %s" % cpuarch)
 
 def main():
     if launchmc:
