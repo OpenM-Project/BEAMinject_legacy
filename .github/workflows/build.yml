@@ -3,6 +3,7 @@ name: Build binary release
 on:
   workflow_dispatch:
   push:
+    branches: [ "main" ]
 
 jobs:
   build_windows64:
