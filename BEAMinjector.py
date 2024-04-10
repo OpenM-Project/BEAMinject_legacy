@@ -5,7 +5,7 @@ For usage as a module, check out the
 "# Modify values for imported usage" section
 of the code, and then configure accordingly
 """
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 import os
 import sys
@@ -28,7 +28,7 @@ quitfunc = sys.exit
 # Identify for inject_buildstr.py
 buildstr = "custombuild"
 
-i64_patch = [
+amd64_patch = [
     (
         bytes.fromhex("39 9E C8 00 00 00 0F 95 C1 88 0F 8B"),
         bytes.fromhex("39 9E C8 00 00 00 B1 00 90 88 0F 8B")
@@ -39,7 +39,7 @@ i64_patch = [
     )
 ]
 
-i32_patch = [
+ia32_patch = [
     (
         bytes.fromhex("FF EB 08 39 77 74 0F 95 C1 88 08 8B"),
         bytes.fromhex("FF EB 08 39 77 74 B1 00 90 88 08 8B")
@@ -52,20 +52,22 @@ i32_patch = [
 
 def get_patches_for_platform() -> list:
     """
-    Returns a list of patches for the target platform.
+    Returns a a tuple of the target platform and
+    list of patches for the target platform.
     Raises NotImplementedError for unavailable targets.
     """
     cpuarch = platform.machine().casefold()
     if cpuarch in ["i386", "i686"]:
-        return i32_patch
+        return ("ia32", ia32_patch)
     elif cpuarch in ["amd64", "x86_64"]:
-        return i64_patch
+        return ("amd64", amd64_patch)
     else:
         raise NotImplementedError("unsupported architecture %s" % cpuarch)
 
 def main():
+    write_logs(f"* Hello from BEAMinjector {__version__}\n")
     if launchmc:
-        write_logs("= Launching Minecraft UWP\n")
+        write_logs("= Launching Minecraft\n")
         os.system("powershell.exe explorer.exe shell:AppsFolder\\$(get-appxpackage -name Microsoft.MinecraftUWP ^| select -expandproperty PackageFamilyName)!App")
     write_logs("= Waiting for Minecraft to launch... ")
     process = None
@@ -101,7 +103,9 @@ def main():
     # Inject new module data
     write_logs("= Patching module... ")
     new_data = data[1]
-    for patch in get_patches_for_platform():
+    hw, patches = get_patches_for_platform()
+    write_logs(f"got patches for {hw}... ")
+    for patch in patches:
         new_data = new_data.replace(patch[0], patch[1])
     write_logs("done!\n")
 
@@ -113,6 +117,7 @@ def main():
         return quitfunc()
     write_logs(f"done (wrote {len(new_data)} bytes)!\n")
 
+    write_logs("* Patched successfully!\n")
     return quitfunc()
 
 if __name__ == "__main__":

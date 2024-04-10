@@ -37,10 +37,10 @@ jobs:
         py ./.github/workflows/inject_buildstr.py app.py
         py ./.github/workflows/inject_buildstr.py BEAMinjector.py
 
-        py -m PyInstaller --noconsole --onefile app.py
-        copy dist/app.exe BEAMinject.exe
         py -m PyInstaller --noconsole --onefile BEAMinjector.py
-        copy dist/BEAMinjector.exe BEAMinject_silent.exe
+        mv dist/BEAMinjector.exe BEAMinject.exe
+        py -m PyInstaller --noconsole --onefile app.py
+        mv dist/app.exe BEAMinject_GUI.exe
 
     - name: Upload binary
       uses: actions/upload-artifact@v2
@@ -48,4 +48,4 @@ jobs:
         name: build
         path: |
           D:\a\BEAMinject\BEAMinject\BEAMinject.exe
-          D:\a\BEAMinject\BEAMinject\BEAMinject_silent.exe
+          D:\a\BEAMinject\BEAMinject\BEAMinject_GUI.exe
