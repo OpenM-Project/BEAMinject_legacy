@@ -6,46 +6,13 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build_windows64:
-    runs-on: windows-latest
-
+  build_arm64:
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v3
+    - uses: pguyot/arm-runner-action@v2
+      id: build_image
       with:
-        python-version: '3.12'
-
-    - name: Compile Pyinstaller & install
-      run: |
-        git clone https://github.com/pyinstaller/pyinstaller.git
-        cd pyinstaller/bootloader
-        py waf all
-        cd ..
-        pip install .
-
-    - name: Get dependencies
-      run: |
-        pip install -r requirements.txt
-        pip install requests
-        py .github/workflows/get_upx.py -nf win64 .
-    
-    - name: Build binary
-      run: |
-        # For easily debuggable builds
-        py ./.github/workflows/inject_buildstr.py app.py
-        py ./.github/workflows/inject_buildstr.py BEAMinjector.py
-
-        py -m PyInstaller --noconsole --onefile BEAMinjector.py
-        mv dist/BEAMinjector.exe BEAMinject.exe
-        py -m PyInstaller --noconsole --onefile app.py
-        mv dist/app.exe BEAMinject_GUI.exe
-
-    - name: Upload binary
-      uses: actions/upload-artifact@v2
-      with:
-        name: build
-        path: |
-          D:\a\BEAMinject\BEAMinject\BEAMinject.exe
-          D:\a\BEAMinject\BEAMinject\BEAMinject_GUI.exe
+        base_image: raspios_lite_arm64:latest
+        commands: |
+            git clone --depth=1 ${{ github.server_url }}/${{ github.repository }}.git
+            cd ${{ github.event.repository.name }}
