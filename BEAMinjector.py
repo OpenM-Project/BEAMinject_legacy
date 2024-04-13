@@ -52,9 +52,8 @@ def main():
         ["tasklist", "/FI", f"IMAGENAME eq Minecraft.Windows.exe", "/FO", "CSV"],
         stderr=subprocess.STDOUT)
     lines = output.decode().splitlines()
-    for line in lines[1:]:
-        _, pid, *_ = line.split(",")
-        PID = int(pid[1:-1])
+    PID = int(lines[1].split(",")[1][1:-1])
+    write_logs(f"found at PID {PID}!\n")
     process_handle = ctypes.windll.kernel32.OpenProcess(librosewater.PROCESS_ALL_ACCESS, False, PID)
     
     # Get module address
