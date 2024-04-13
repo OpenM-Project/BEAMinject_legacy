@@ -5,15 +5,16 @@ For usage as a module, check out the
 "# Modify values for imported usage" section
 of the code, and then configure accordingly
 """
-__version__ = "0.2.2"
+__version__ = "0.3.1"
 
 import os
 import sys
+import json
 import ctypes
+import subprocess
 import librosewater
 import librosewater.module
-import platform
-import psutil
+import maxrm_mcpatch
 
 # Modify values for imported usage
 launchmc = True
@@ -28,58 +29,31 @@ quitfunc = sys.exit
 # Identify for inject_buildstr.py
 buildstr = "custombuild"
 
-amd64_patch = [
-    (
-        bytes.fromhex("39 9E C8 00 00 00 0F 95 C1 88 0F 8B"),
-        bytes.fromhex("39 9E C8 00 00 00 B1 00 90 88 0F 8B")
-    ),
-    (
-        bytes.fromhex("FF EB 05 8A 49 61 88 0A 8B CB E8"),
-        bytes.fromhex("FF EB 05 B1 00 90 88 0A 8B CB E8")
-    )
-]
-
-ia32_patch = [
-    (
-        bytes.fromhex("FF EB 08 39 77 74 0F 95 C1 88 08 8B"),
-        bytes.fromhex("FF EB 08 39 77 74 B1 00 90 88 08 8B")
-    ),
-    (
-        bytes.fromhex("FF EB 08 8B 4D 08 8A 49 31 88 08 8B"),
-        bytes.fromhex("FF EB 08 8B 4D 08 B1 00 90 88 08 8B")
-    )
-]
-
-def get_patches_for_platform() -> list:
-    """
-    Returns a a tuple of the target platform and
-    list of patches for the target platform.
-    Raises NotImplementedError for unavailable targets.
-    """
-    cpuarch = platform.machine().casefold()
-    if cpuarch in ["i386", "i686"]:
-        return ("ia32", ia32_patch)
-    elif cpuarch in ["amd64", "x86_64"]:
-        return ("amd64", amd64_patch)
-    else:
-        raise NotImplementedError("unsupported architecture %s" % cpuarch)
-
 def main():
     write_logs(f"* Hello from BEAMinjector {__version__}\n")
+    write_logs("= Getting Minecraft install... ")
+    mcinstall = json.loads(subprocess.run(["powershell.exe",
+    "Get-AppxPackage -name Microsoft.MinecraftUWP | ConvertTo-Json"],
+    stdout=subprocess.PIPE, text=True).stdout)
+    if not mcinstall:
+        write_logs("\n! Couldn't find Minecraft\n")
+        return quitfunc()
+    mcpath = os.path.join(mcinstall["InstallLocation"], "Minecraft.Windows.exe")
+    write_logs(f"found version {mcinstall["Version"]}!\n")
     if launchmc:
         write_logs("= Launching Minecraft\n")
-        os.system("powershell.exe explorer.exe shell:AppsFolder\\$(get-appxpackage -name Microsoft.MinecraftUWP ^| select -expandproperty PackageFamilyName)!App")
+        subprocess.run(["powershell.exe", f'explorer.exe shell:AppsFolder\\{mcinstall["PackageFamilyName"]}!App'])
     write_logs("= Waiting for Minecraft to launch... ")
-    process = None
-    while not process:
-        for proc in psutil.process_iter():
-            try:
-                if "Minecraft.Windows.exe" in proc.name():
-                    process = proc
-            except psutil.NoSuchProcess:
-                pass
-    write_logs(f"found at PID {process.pid}! Proceeding...\n")
-    PID = process.pid
+    while not "Minecraft.Windows.exe".encode() in \
+        subprocess.check_output(["tasklist", "/FI", "IMAGENAME eq Minecraft.Windows.exe"],
+            stderr=subprocess.STDOUT):
+        continue
+    output = subprocess.check_output(
+        ["tasklist", "/FI", f"IMAGENAME eq Minecraft.Windows.exe", "/FO", "CSV"],
+        stderr=subprocess.STDOUT)
+    lines = output.decode().splitlines()
+    PID = int(lines[1].split(",")[1][1:-1])
+    write_logs(f"found at PID {PID}!\n")
     process_handle = ctypes.windll.kernel32.OpenProcess(librosewater.PROCESS_ALL_ACCESS, False, PID)
     
     # Get module address
@@ -102,11 +76,12 @@ def main():
 
     # Inject new module data
     write_logs("= Patching module... ")
-    new_data = data[1]
-    hw, patches = get_patches_for_platform()
-    write_logs(f"got patches for {hw}... ")
-    for patch in patches:
-        new_data = new_data.replace(patch[0], patch[1])
+    try:
+        arch = maxrm_mcpatch.check_machine(mcpath)
+    except NotImplementedError:
+        write_logs("\n ! Couldn't find patches for platform, may be unsupported")
+    write_logs(f"got architecture {arch}... ")
+    new_data = maxrm_mcpatch.patch_module(arch, data[1])
     write_logs("done!\n")
 
     write_logs("= Injecting module... ")
