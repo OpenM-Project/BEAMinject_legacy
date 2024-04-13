@@ -4,6 +4,16 @@
 
 -----
 
+## :test_tube: ARM support
+As of version 0.3.0, BEAMinject supports Windows ARM64!
+
+Prebuilts are not avaiable yet,
+but you can manually run it after installing Python:
+```sh
+pip install -r requirements.txt
+py app.py
+```
+
 ## :wrench: Versions
 BEAMinject comes in 2 versions:
 - **BEAMinject:** Used for silently launching Minecraft then exiting
