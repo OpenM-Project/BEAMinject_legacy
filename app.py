@@ -4,7 +4,7 @@ BEAMinject GUI app
 This code is experimental, check out our GitHub repository:
 https://github.com/OpenM-Project/BEAMinject for more info
 """
-__version__ = "0.3.0 alpha"
+__version__ = "0.3.1"
 
 import sys
 import threading

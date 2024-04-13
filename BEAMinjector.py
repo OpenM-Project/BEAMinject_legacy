@@ -5,15 +5,13 @@ For usage as a module, check out the
 "# Modify values for imported usage" section
 of the code, and then configure accordingly
 """
-__version__ = "0.3.0 alpha"
+__version__ = "0.3.1"
 
 import os
 import sys
 import json
 import ctypes
-import platform
 import subprocess
-import psutil
 import librosewater
 import librosewater.module
 import maxrm_mcpatch
@@ -46,16 +44,17 @@ def main():
         write_logs("= Launching Minecraft\n")
         subprocess.run(["powershell.exe", f'explorer.exe shell:AppsFolder\\{mcinstall["PackageFamilyName"]}!App'])
     write_logs("= Waiting for Minecraft to launch... ")
-    process = None
-    while not process:
-        for proc in psutil.process_iter():
-            try:
-                if "Minecraft.Windows.exe" in proc.name():
-                    process = proc
-            except psutil.NoSuchProcess:
-                pass
-    write_logs(f"found at PID {process.pid}! Proceeding...\n")
-    PID = process.pid
+    while not "Minecraft.Windows.exe".encode() in \
+        subprocess.check_output(["tasklist", "/FI", "IMAGENAME eq Minecraft.Windows.exe"],
+            stderr=subprocess.STDOUT):
+        continue
+    output = subprocess.check_output(
+        ["tasklist", "/FI", f"IMAGENAME eq Minecraft.Windows.exe", "/FO", "CSV"],
+        stderr=subprocess.STDOUT)
+    lines = output.decode().splitlines()
+    for line in lines[1:]:
+        _, pid, *_ = line.split(",")
+        PID = int(pid[1:-1])
     process_handle = ctypes.windll.kernel32.OpenProcess(librosewater.PROCESS_ALL_ACCESS, False, PID)
     
     # Get module address
