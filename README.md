@@ -4,20 +4,6 @@
 
 -----
 
-## :test_tube: ARM support
-As of version 0.3.0, BEAMinject supports Windows on ARM!
-
-You can download builds [here](https://github.com/OpenM-Project/BEAMinject_ARMbinary).
-
-### :hammer_and_wrench: ARMv7 support
-:warning: **WARNING:** No support is provided for ARMv7 platforms. This platform is completely untested.
-
-For ARMv7 *(aka ARM32)*, you need to have a Python runtime and then install dependencies and run manually:
-```bat
-pip install -r requirements.txt
-py app.py
-```
-
 ## :wrench: Versions
 BEAMinject comes in 2 versions:
 - **BEAMinject:** Used for silently launching Minecraft then exiting
@@ -36,6 +22,20 @@ Some poorly designed AVs *(namely Microsoft, Avast and AVG)* might detect our pa
 There is [**nothing we can do about this**](https://github.com/pyinstaller/pyinstaller/issues/6754#issuecomment-1100821249) except sign the binaries, which is [***really* expensive**](https://codesigncert.com/blog/code-signing-certificate-cost).
 
 Since the code is open and all builds are distributed via GitHub Actions, you can confirm that the executable is safe and whitelist it in your AV software!
+
+## :test_tube: ARM support
+As of version 0.3.0, BEAMinject supports Windows on ARM!
+
+You can download builds [here](https://github.com/OpenM-Project/BEAMinject_ARMbinary).
+
+### :hammer_and_wrench: ARMv7 support
+:warning: **WARNING:** No support is provided for ARMv7 platforms. This platform is completely untested.
+
+For ARMv7 *(aka ARM32)*, you need to have a Python runtime and then install dependencies and run manually:
+```bat
+pip install -r requirements.txt
+py app.py
+```
 
 ## :computer: Support
 This only works on Windows,
