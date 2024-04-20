@@ -5,7 +5,7 @@ For usage as a module, check out the
 "# Modify values for imported usage" section
 of the code, and then configure accordingly
 """
-__version__ = "0.3.1"
+__version__ = "0.3.2"
 
 import os
 import sys
@@ -40,6 +40,7 @@ def main():
         return quitfunc()
     mcpath = os.path.join(mcinstall["InstallLocation"], "Minecraft.Windows.exe")
     write_logs(f"found version {mcinstall["Version"]}!\n")
+
     if launchmc:
         write_logs("= Launching Minecraft\n")
         subprocess.run(["powershell.exe", f'explorer.exe shell:AppsFolder\\{mcinstall["PackageFamilyName"]}!App'])
@@ -51,11 +52,11 @@ def main():
     output = subprocess.check_output(
         ["tasklist", "/FI", f"IMAGENAME eq Minecraft.Windows.exe", "/FO", "CSV"],
         stderr=subprocess.STDOUT)
-    lines = output.decode().splitlines()
-    PID = int(lines[1].split(",")[1][1:-1])
+    lines = output.splitlines()
+    PID = int(lines[1].split(b",")[1][1:-1])
     write_logs(f"found at PID {PID}!\n")
     process_handle = ctypes.windll.kernel32.OpenProcess(librosewater.PROCESS_ALL_ACCESS, False, PID)
-    
+
     # Get module address
     write_logs("= Waiting for module... ")
     try:
