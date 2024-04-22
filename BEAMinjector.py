@@ -5,7 +5,7 @@ For usage as a module, check out the
 "# Modify values for imported usage" section
 of the code, and then configure accordingly
 """
-__version__ = "0.3.2"
+__version__ = "0.3.3"
 
 import os
 import sys
@@ -29,32 +29,50 @@ quitfunc = sys.exit
 # Identifier for inject_buildstr.py
 buildstr = "custombuild"
 
+
+def getres(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+def runcmd(args):
+    try:
+        return subprocess.run(args, stdout=subprocess.PIPE,
+            encoding='cp1252', universal_newlines=True)
+    except Exception:
+        pass
+
+
 def main():
     write_logs(f"* Hello from BEAMinjector {__version__}\n")
-
     write_logs("= Getting Minecraft install... ")
-    mcinstall = json.loads(subprocess.run(["powershell.exe",
-    "Get-AppxPackage -name Microsoft.MinecraftUWP | ConvertTo-Json"],
-    stdout=subprocess.PIPE).stdout)
+    mcinstall = runcmd(["powershell.exe", "-ExecutionPolicy",
+        "Bypass", "-File", getres("getmc.ps1")])
+    try:
+        mcinstall = json.loads(mcinstall.stdout)
+    except Exception:
+        mcinstall = None
     if not mcinstall:
         write_logs("\n! Couldn't find Minecraft\n")
         return quitfunc()
-    mcpath = os.path.join(mcinstall["InstallLocation"], "Minecraft.Windows.exe")
-    write_logs(f"found version {mcinstall["Version"]}!\n")
+    write_logs(f"found version {mcinstall[0]}!\n")
 
     # Wait for Minecraft
     if launchmc:
         write_logs("= Launching Minecraft\n")
-        subprocess.run(["powershell.exe", f'explorer.exe shell:AppsFolder\\{mcinstall["PackageFamilyName"]}!App'])
+        runcmd(["powershell.exe", f'explorer.exe shell:AppsFolder\\{mcinstall[1]}!App'])
     write_logs("= Waiting for Minecraft to launch... ")
     PID = None
     while not PID:
-        output = subprocess.check_output(
-            ["tasklist", "/FI", f"IMAGENAME eq Minecraft.Windows.exe", "/FO", "CSV"],
-            stderr=subprocess.STDOUT)
-        lines = output.splitlines()
-        if len(lines) > 1 and b"Minecraft.Windows.exe" in lines[1]:
-            PID = int(lines[1].split(b",")[1][1:-1])
+        output = runcmd(
+            ["tasklist", "/FI", f"IMAGENAME eq Minecraft.Windows.exe", "/FO", "CSV"])
+        if not output:
+            continue
+        lines = output.stdout.splitlines()
+        if len(lines) > 1 and "Minecraft.Windows.exe" in lines[1]:
+            PID = int(lines[1].split(",")[1][1:-1])
     write_logs(f"found at PID {PID}!\n")
     process_handle = ctypes.windll.kernel32.OpenProcess(librosewater.PROCESS_ALL_ACCESS, False, PID)
 
@@ -62,7 +80,8 @@ def main():
     write_logs("= Waiting for module... ")
     try:
         module_address, _ = librosewater.module.wait_for_module(process_handle, "Windows.ApplicationModel.Store.dll")
-    except librosewater.exceptions.QueryError:
+    except librosewater.exceptions.QueryError as ex:
+        raise ex
         write_logs(f"! Couldn't wait for module, did Minecraft close?\n")
         return quitfunc()
     write_logs(f"found at {hex(module_address)}!\n")
@@ -79,7 +98,7 @@ def main():
     # Inject new module data
     write_logs("= Patching module... ")
     try:
-        arch = maxrm_mcpatch.check_machine(mcpath)
+        arch = maxrm_mcpatch.check_machine(mcinstall[2])
     except NotImplementedError:
         write_logs("\n ! Couldn't find patches for platform, may be unsupported")
     write_logs(f"got architecture {arch}... ")
