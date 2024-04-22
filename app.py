@@ -11,7 +11,7 @@ import threading
 import customtkinter
 import BEAMinjector
 
-# Identify for inject_buildstr.py
+# Identifier for inject_buildstr.py
 buildstr = "custombuild"
 
 app = customtkinter.CTk()
@@ -63,7 +63,6 @@ title.configure(text="BEAMinject", font=("", 30))
 startbutton = customtkinter.CTkButton(master=frame, command=start_inject)
 startbutton.pack(pady=10, padx=10)
 startbutton.configure(text="Let's go!")
-
 
 # Launch MC
 launchmc = customtkinter.IntVar()

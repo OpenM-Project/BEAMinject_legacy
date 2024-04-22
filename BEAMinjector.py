@@ -26,34 +26,35 @@ else:
         pass
 quitfunc = sys.exit
 
-# Identify for inject_buildstr.py
+# Identifier for inject_buildstr.py
 buildstr = "custombuild"
 
 def main():
     write_logs(f"* Hello from BEAMinjector {__version__}\n")
+
     write_logs("= Getting Minecraft install... ")
     mcinstall = json.loads(subprocess.run(["powershell.exe",
     "Get-AppxPackage -name Microsoft.MinecraftUWP | ConvertTo-Json"],
-    stdout=subprocess.PIPE, text=True).stdout)
+    stdout=subprocess.PIPE).stdout)
     if not mcinstall:
         write_logs("\n! Couldn't find Minecraft\n")
         return quitfunc()
     mcpath = os.path.join(mcinstall["InstallLocation"], "Minecraft.Windows.exe")
     write_logs(f"found version {mcinstall["Version"]}!\n")
 
+    # Wait for Minecraft
     if launchmc:
         write_logs("= Launching Minecraft\n")
         subprocess.run(["powershell.exe", f'explorer.exe shell:AppsFolder\\{mcinstall["PackageFamilyName"]}!App'])
     write_logs("= Waiting for Minecraft to launch... ")
-    while not "Minecraft.Windows.exe".encode() in \
-        subprocess.check_output(["tasklist", "/FI", "IMAGENAME eq Minecraft.Windows.exe"],
-            stderr=subprocess.STDOUT):
-        continue
-    output = subprocess.check_output(
-        ["tasklist", "/FI", f"IMAGENAME eq Minecraft.Windows.exe", "/FO", "CSV"],
-        stderr=subprocess.STDOUT)
-    lines = output.splitlines()
-    PID = int(lines[1].split(b",")[1][1:-1])
+    PID = None
+    while not PID:
+        output = subprocess.check_output(
+            ["tasklist", "/FI", f"IMAGENAME eq Minecraft.Windows.exe", "/FO", "CSV"],
+            stderr=subprocess.STDOUT)
+        lines = output.splitlines()
+        if len(lines) > 1 and b"Minecraft.Windows.exe" in lines[1]:
+            PID = int(lines[1].split(b",")[1][1:-1])
     write_logs(f"found at PID {PID}!\n")
     process_handle = ctypes.windll.kernel32.OpenProcess(librosewater.PROCESS_ALL_ACCESS, False, PID)
 
