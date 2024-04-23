@@ -103,7 +103,6 @@ Max-RM patches version {maxrm_mcpatch.__version__}\n")
         write_logs("\n ! Couldn't find patches for platform, may be unsupported")
     write_logs(f"got architecture {arch}... ")
     new_data = maxrm_mcpatch.patch_module(arch, data[1])
-    print(new_data == data[1])
     write_logs("done!\n")
 
     write_logs("= Injecting module... ")
