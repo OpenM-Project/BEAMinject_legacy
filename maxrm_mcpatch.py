@@ -2,7 +2,7 @@
 Hex patterns for Minecraft patching
 by Max-RM
 """
-__version__ = "0.2"
+__version__ = "0.2.1"
 
 import re
 IMAGE_FILE_MACHINE_AMD64 = 0x8664 # x64
@@ -87,7 +87,7 @@ def patch_module(architecture: str, dll_data: bytes) -> bytes:
         )
         dll_data = re.sub(
             _c_h(r"(02 E0) 90 F8 .. 30 (0B 70 20 46)"),
-            _c_h(r"\1 4F F0 00 03 \2"),
+            _c_h(r"02 E0 4F F0 00 03 0B 70 20 46"), # having issues with \1 and \2, hardcode for now
             dll_data
         )
     elif architecture == "arm64":

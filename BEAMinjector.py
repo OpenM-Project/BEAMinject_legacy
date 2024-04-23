@@ -5,7 +5,7 @@ For usage as a module, check out the
 "# Modify values for imported usage" section
 of the code, and then configure accordingly
 """
-__version__ = "0.3.3"
+__version__ = "0.3.4"
 
 import os
 import sys
@@ -29,7 +29,6 @@ quitfunc = sys.exit
 # Identifier for inject_buildstr.py
 buildstr = "custombuild"
 
-
 def getres(relative_path):
     try:
         base_path = sys._MEIPASS
@@ -46,7 +45,8 @@ def runcmd(args):
 
 
 def main():
-    write_logs(f"* Hello from BEAMinjector {__version__}\n")
+    write_logs(f"* Hello from BEAMinjector {__version__}, \
+Max-RM patches version {maxrm_mcpatch.__version__}\n")
     write_logs("= Getting Minecraft install... ")
     mcinstall = runcmd(["powershell.exe", "-ExecutionPolicy",
         "Bypass", "-File", getres("getmc.ps1")])
@@ -64,14 +64,15 @@ def main():
         write_logs("= Launching Minecraft\n")
         runcmd(["powershell.exe", f'explorer.exe shell:AppsFolder\\{mcinstall[1]}!App'])
     write_logs("= Waiting for Minecraft to launch... ")
+    mcapp = os.path.basename(mcinstall[2])
     PID = None
     while not PID:
         output = runcmd(
-            ["tasklist", "/FI", f"IMAGENAME eq Minecraft.Windows.exe", "/FO", "CSV"])
+            ["tasklist", "/FI", f"IMAGENAME eq {mcapp}", "/FO", "CSV"])
         if not output:
             continue
         lines = output.stdout.splitlines()
-        if len(lines) > 1 and "Minecraft.Windows.exe" in lines[1]:
+        if len(lines) > 1 and mcapp in lines[1]:
             PID = int(lines[1].split(",")[1][1:-1])
     write_logs(f"found at PID {PID}!\n")
     process_handle = ctypes.windll.kernel32.OpenProcess(librosewater.PROCESS_ALL_ACCESS, False, PID)
@@ -102,6 +103,7 @@ def main():
         write_logs("\n ! Couldn't find patches for platform, may be unsupported")
     write_logs(f"got architecture {arch}... ")
     new_data = maxrm_mcpatch.patch_module(arch, data[1])
+    print(new_data == data[1])
     write_logs("done!\n")
 
     write_logs("= Injecting module... ")
