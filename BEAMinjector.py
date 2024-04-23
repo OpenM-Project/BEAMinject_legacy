@@ -81,7 +81,6 @@ def main():
     try:
         module_address, _ = librosewater.module.wait_for_module(process_handle, "Windows.ApplicationModel.Store.dll")
     except librosewater.exceptions.QueryError as ex:
-        raise ex
         write_logs(f"! Couldn't wait for module, did Minecraft close?\n")
         return quitfunc()
     write_logs(f"found at {hex(module_address)}!\n")
