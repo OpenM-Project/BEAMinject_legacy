@@ -1,8 +1,5 @@
 """
 BEAMinject GUI app
-
-This code is experimental, check out our GitHub repository:
-https://github.com/wavEye-Project/BEAMinject for more info
 """
 import BEAMinjector
 __version__ = BEAMinjector.__version__
