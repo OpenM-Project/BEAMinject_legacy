@@ -5,13 +5,14 @@ For usage as a module, check out the
 "# Modify values for imported usage" section
 of the code, and then configure accordingly
 """
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 
 import os
 import io
 import sys
 import json
 import ctypes
+import traceback
 import subprocess
 import librosewater
 import librosewater.module
@@ -113,20 +114,25 @@ def main_():
 
     write_logs("= Injecting module... ")
     try:
-        librosewater.module.inject_module(process_handle, module_address, new_data)
+        librosewater.module.inject_module(process_handle, module_address, new_data, ignore_security_fix=True)
     except librosewater.exceptions.ReadWriteError:
         write_logs(f"\n! Couldn't inject module, did Minecraft close?\n")
-        cleanquit(process_handle, 1)
+        return cleanquit(process_handle, 1)
     write_logs(f"done (wrote {len(new_data)} bytes)!\n")
 
     write_logs("* Patched successfully!\n")
-    cleanquit(process_handle, 0)
+    return cleanquit(process_handle, 0)
 
 def main():
     try:
         main_()
     except Exception as ex:
-        write_logs(f"\n! Uncaught error of type {type(ex).__name__} \
+        if "--debugging" in sys.argv:
+            tb = traceback.format_exc()
+            write_logs("\n! Uncaught error occured, printing full traceback since debugging is enabled\n")
+            write_logs(tb)
+        else:
+            write_logs(f"\n! Uncaught error of type {type(ex).__name__} \
 occured: {str(ex)}")
         return quitfunc(1)
 
@@ -134,11 +140,17 @@ if __name__ == "__main__":
     if "--preview" in sys.argv:
         preview_version = True
     if "--debugging" in sys.argv:
-        write_logs = io.StringIO().write
+        logs = io.StringIO()
+        def write_logs(*args, **kwargs):
+            if sys.stdout:
+                sys.stdout.write(*args, **kwargs)
+                sys.stdout.flush()
+            global logs
+            logs.write(*args, **kwargs)
         log_type = None
         def quitfunc(code): globals().update({'log_type': 16 if code else 64})
         main()
-        write_logs.__self__.seek(0)
-        ctypes.windll.user32.MessageBoxW(None, write_logs.__self__.read(), f'BEAMinject {__version__}', log_type)
+        logs.seek(0)
+        ctypes.windll.user32.MessageBoxW(None, logs.read(), f'BEAMinject {__version__}', log_type)
         sys.exit(1 if log_type == 16 else 0)
     main()
