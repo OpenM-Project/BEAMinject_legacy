@@ -5,85 +5,85 @@ For usage as a module, check out the
 "# Modify values for imported usage" section
 of the code, and then configure accordingly
 """
-__version__ = "0.3.4"
+__version__ = "0.4.0"
 
 import os
+import io
 import sys
 import json
 import ctypes
 import subprocess
 import librosewater
 import librosewater.module
+import librosewater.process
 import maxrm_mcpatch
 
 # Modify values for imported usage
 launchmc = True
-if sys.stdout:
-    write_logs = sys.stdout.write
-else:
-    # sys.stdout doesn't exist, so we can just write a dummy function
-    def write_logs(*args, **kwargs):
-        pass
+def write_logs(*args, **kwargs):
+    if sys.stdout:
+        sys.stdout.write(*args, **kwargs)
+        sys.stdout.flush()
+
+def cleanquit(process_handle, arg):
+    ctypes.windll.kernel32.CloseHandle(process_handle)
+    return quitfunc(arg)
 quitfunc = sys.exit
+preview_version = False
 
 # Identifier for inject_buildstr.py
 buildstr = "custombuild"
 
-def getres(relative_path):
-    try:
-        base_path = sys._MEIPASS
-    except AttributeError:
-        base_path = os.path.abspath(".")
-    return os.path.join(base_path, relative_path)
-
 def runcmd(args):
     try:
-        return subprocess.run(args, stdout=subprocess.PIPE,
-            encoding='cp1252', universal_newlines=True)
-    except Exception:
+        return subprocess.check_output(args, stderr=subprocess.STDOUT, errors="ignore")
+    except subprocess.CalledProcessError:
         pass
 
+def main_():
+    write_logs(f"* Hello from BEAMinjector, version {__version__}\n")
+    write_logs(f"* Using Max-RM's patches, version {maxrm_mcpatch.__version__}\n")
 
-def main():
-    write_logs(f"* Hello from BEAMinjector {__version__}, \
-Max-RM patches version {maxrm_mcpatch.__version__}\n")
-    write_logs("= Getting Minecraft install... ")
-    mcinstall = runcmd(["powershell.exe", "-ExecutionPolicy",
-        "Bypass", "-File", getres("getmc.ps1")])
+    if preview_version:
+        package_name = "Microsoft.MinecraftWindowsBeta"
+    else:
+        package_name = "Microsoft.MinecraftUWP"
+    payload = f'powershell.exe -c "Get-AppxPackage -name {package_name} | ' \
+        'ForEach-Object { @($_.Version, $_.PackageFamilyName, ' \
+        '(Join-Path $_.InstallLocation (Get-AppxPackageManifest $_).' \
+        'Package.Applications.Application.Executable)) ' \
+        '| ConvertTo-Json }"'
+    write_logs(f"= Getting Minecraft{' Preview' if preview_version else ''} install... ")
     try:
-        mcinstall = json.loads(mcinstall.stdout)
-    except Exception:
-        mcinstall = None
-    if not mcinstall:
-        write_logs("\n! Couldn't find Minecraft\n")
-        return quitfunc()
+        mcinstall = json.loads(runcmd(payload))
+    except TypeError:
+        write_logs("\n! Error while getting Minecraft install\n")
+        return quitfunc(1)
+    except json.JSONDecodeError:
+        write_logs("\n! Minecraft not found\n")
+        return quitfunc(1)
     write_logs(f"found version {mcinstall[0]}!\n")
 
     # Wait for Minecraft
     if launchmc:
-        write_logs("= Launching Minecraft\n")
-        runcmd(["powershell.exe", f'explorer.exe shell:AppsFolder\\{mcinstall[1]}!App'])
+        write_logs("* Launching Minecraft\n")
+        runcmd(f'powershell.exe explorer.exe shell:AppsFolder\\{mcinstall[1]}!App')
     write_logs("= Waiting for Minecraft to launch... ")
     mcapp = os.path.basename(mcinstall[2])
-    PID = None
-    while not PID:
-        output = runcmd(
-            ["tasklist", "/FI", f"IMAGENAME eq {mcapp}", "/FO", "CSV"])
-        if not output:
-            continue
-        lines = output.stdout.splitlines()
-        if len(lines) > 1 and mcapp in lines[1]:
-            PID = int(lines[1].split(",")[1][1:-1])
+    try:
+        PID, process_handle = librosewater.process.wait_for_process(mcapp)
+    except librosewater.exceptions.QueryError:
+        write_logs(f"\n! Couldn't wait for Minecraft (likely OS error)\n")
+        return quitfunc(1)
     write_logs(f"found at PID {PID}!\n")
-    process_handle = ctypes.windll.kernel32.OpenProcess(librosewater.PROCESS_ALL_ACCESS, False, PID)
 
     # Get module address
     write_logs("= Waiting for module... ")
     try:
         module_address, _ = librosewater.module.wait_for_module(process_handle, "Windows.ApplicationModel.Store.dll")
-    except librosewater.exceptions.QueryError as ex:
-        write_logs(f"! Couldn't wait for module, did Minecraft close?\n")
-        return quitfunc()
+    except librosewater.exceptions.ProcessClosedError:
+        write_logs(f"\n! Minecraft process was closed\n")
+        return cleanquit(process_handle, 1)
     write_logs(f"found at {hex(module_address)}!\n")
 
     # Dump module to variable
@@ -92,7 +92,7 @@ Max-RM patches version {maxrm_mcpatch.__version__}\n")
         data = librosewater.module.dump_module(process_handle, module_address)
     except librosewater.exceptions.ReadWriteError:
         write_logs(f"\n! Couldn't dump module, did Minecraft close?\n")
-        return quitfunc()
+        return cleanquit(process_handle, 1)
     write_logs(f"done (read {len(data[1])} bytes)!\n")
 
     # Inject new module data
@@ -100,8 +100,14 @@ Max-RM patches version {maxrm_mcpatch.__version__}\n")
     try:
         arch = maxrm_mcpatch.check_machine(mcinstall[2])
     except NotImplementedError:
-        write_logs("\n ! Couldn't find patches for platform, may be unsupported")
+        write_logs("\n! Couldn't find patches for platform, may be unsupported")
+        return cleanquit(process_handle, 1)
     write_logs(f"got architecture {arch}... ")
+
+    # The reason why we don't check error here is because
+    # it's guaranteed to be one of the supported architectures
+    # by the patches. The check is there for external usage of
+    # the Max-RM hex patches.
     new_data = maxrm_mcpatch.patch_module(arch, data[1])
     write_logs("done!\n")
 
@@ -110,11 +116,29 @@ Max-RM patches version {maxrm_mcpatch.__version__}\n")
         librosewater.module.inject_module(process_handle, module_address, new_data)
     except librosewater.exceptions.ReadWriteError:
         write_logs(f"\n! Couldn't inject module, did Minecraft close?\n")
-        return quitfunc()
+        cleanquit(process_handle, 1)
     write_logs(f"done (wrote {len(new_data)} bytes)!\n")
 
     write_logs("* Patched successfully!\n")
-    return quitfunc()
+    cleanquit(process_handle, 0)
+
+def main():
+    try:
+        main_()
+    except Exception as ex:
+        write_logs(f"\n! Uncaught error of type {type(ex).__name__} \
+occured: {str(ex)}")
+        return quitfunc(1)
 
 if __name__ == "__main__":
+    if "--preview" in sys.argv:
+        preview_version = True
+    if "--debugging" in sys.argv:
+        write_logs = io.StringIO().write
+        log_type = None
+        def quitfunc(code): globals().update({'log_type': 16 if code else 64})
+        main()
+        write_logs.__self__.seek(0)
+        ctypes.windll.user32.MessageBoxW(None, write_logs.__self__.read(), f'BEAMinject {__version__}', log_type)
+        sys.exit(1 if log_type == 16 else 0)
     main()

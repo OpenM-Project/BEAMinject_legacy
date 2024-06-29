@@ -17,30 +17,29 @@ jobs:
       with:
         python-version: '3.x'
 
-    - name: Compile Pyinstaller & install
-      run: |
-        git clone https://github.com/pyinstaller/pyinstaller.git
-        cd pyinstaller/bootloader
-        py waf all
-        cd ..
-        pip install .
-
     - name: Get dependencies
       run: |
         pip install -r requirements.txt
+
+    - name: Inject build string
+      run: |
+        py .github/workflows/inject_buildstr.py app.py
+        py .github/workflows/inject_buildstr.py BEAMinjector.py
+
+    - name: Build BEAMinject
+      run: |
+        pip install nuitka
+        echo `n | py -m nuitka --onefile --enable-plugin=tk-inter --include-package=customtkinter --disable-console app.py
+        py -m nuitka --onefile --disable-console BEAMinjector.py
+
+    - name: Pack files with UPX
+      run: |
         pip install requests
         py .github/workflows/get_upx.py -nf win64 .
-
-    - name: Build binary
-      run: |
-        # For easily debuggable builds
-        py ./.github/workflows/inject_buildstr.py app.py
-        py ./.github/workflows/inject_buildstr.py BEAMinjector.py
-
-        py -m PyInstaller --add-data="getmc.ps1:." --noconsole --onefile BEAMinjector.py
-        mv dist/BEAMinjector.exe BEAMinject.exe
-        py -m PyInstaller --add-data="getmc.ps1:." --noconsole --onefile app.py
-        mv dist/app.exe BEAMinject_GUI.exe
+        mv BEAMinjector.exe BEAMinject.exe
+        ./upx --brute BEAMinject.exe
+        mv app.exe BEAMinject_GUI.exe
+        ./upx --brute BEAMinject_GUI.exe
 
     - name: Upload binary
       uses: actions/upload-artifact@v4

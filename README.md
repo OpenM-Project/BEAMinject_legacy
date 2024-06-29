@@ -16,6 +16,11 @@ We recommend trying BEAMinject first, and if you have issues, you can move to th
 ## :inbox_tray: Downloads
 You can download the latest nightly release [here](https://nightly.link/OpenM-Project/BEAMinject/workflows/build/main/BEAMinject_nightly.zip).
 
+## :test_tube: Patching Minecraft Preview
+For the GUI version, you can simply switch the `Patch Minecraft Preview` option on!
+
+As for silent version, you can pass in the `--preview` argument.
+
 ## :rotating_light: About AV detections
 Some poorly designed AVs *(namely Microsoft, Avast and AVG)* might detect our packed Python executables as a trojan.
 
