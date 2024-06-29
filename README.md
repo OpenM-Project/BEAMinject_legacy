@@ -35,7 +35,7 @@ Read support status [here](ARMstatus.md).
 This only works on Windows,
 and won't be ported to other platforms *(for obvious reasons)*.
 
-For all support needed, you can open an [issue](https://github.com/OpenM-Project/BEAMinject/issues/), or you can join our [Discord](https://dsc.gg/openmproject "OpenM Community") server for any further support needed.
+For all support needed, you can open an [issue](https://github.com/OpenM-Project/BEAMinject/issues/), or you can join our [Discord](https://dsc.gg/openmproject "OpenM Community") server or [subreddit](https://www.reddit.com/r/openmproject/) for any further support needed.
 
 ## :page_with_curl: License
 All code and assets are licensed under GNU AGPLv3.
