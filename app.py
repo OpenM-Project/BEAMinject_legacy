@@ -15,7 +15,7 @@ buildstr = "custombuild"
 app = customtkinter.CTk()
 app.geometry("480x360")
 app.resizable(False, False)
-app.title(f"BEAMinject {__version__}")
+app.title(f"BEAMinject by wavEye {__version__}")
 customtkinter.set_appearance_mode("system")
 customtkinter.set_default_color_theme("green")
 
