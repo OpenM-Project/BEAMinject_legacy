@@ -42,7 +42,7 @@ def runcmd(args):
         pass
 
 def main_():
-    write_logs(f"* Hello from BEAMinjector by wavEye, version {__version__}\n")
+    write_logs(f"* Hello from BEAMinjector by OpenM, version {__version__}\n")
     write_logs(f"* Using Max-RM's patches, version {maxrm_mcpatch.__version__}\n")
 
     if preview_version:
