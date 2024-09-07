@@ -46,5 +46,5 @@ jobs:
       with:
         name: BEAMinject_nightly
         path: |
-          D:\a\BEAMinject\BEAMinject\BEAMinject.exe
-          D:\a\BEAMinject\BEAMinject\BEAMinject_GUI.exe
+          D:\a\BEAMinject_legacy\BEAMinject_legacy\BEAMinject_legacy.exe
+          D:\a\BEAMinject_legacy\BEAMinject_legacy\BEAMinject_legacy_GUI.exe
